@@ -1,0 +1,26 @@
+"""Code Challenge: Create a function which takes in numerical data as a csv with an arbitrary number of fields, 
+and a selection of which three fields to assign to red, green, and blue, and returns an image."""
+
+import csv
+import numpy as np
+from PIL import Image
+
+def create_image_from_csv(filename, red_field, green_field, blue_field):
+    # Read CSV data into a numpy array
+    data = np.genfromtxt(filename, delimiter=',', skip_header=1)
+
+    # Extract red, green, and blue color channels from selected fields
+    red = data[:, red_field]
+    green = data[:, green_field]
+    blue = data[:, blue_field]
+
+    # Scale values to 0-255 range
+    red = (255 * (red - np.min(red)) / (np.max(red) - np.min(red))).astype(np.uint8)
+    green = (255 * (green - np.min(green)) / (np.max(green) - np.min(green))).astype(np.uint8)
+    blue = (255 * (blue - np.min(blue)) / (np.max(blue) - np.min(blue))).astype(np.uint8)
+
+    # Create image from color channels
+    image_data = np.stack([red, green, blue], axis=-1)
+    image = Image.fromarray(image_data)
+
+    return image
