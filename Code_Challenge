@@ -1,26 +1,64 @@
-"""Code Challenge: Create a function which takes in numerical data as a csv with an arbitrary number of fields, 
+"""Code Challenge: Create a function which takes in numerical data as a csv with an arbitrary number of fields,
 and a selection of which three fields to assign to red, green, and blue, and returns an image."""
 
+import random
 import csv
+import pandas as pd
 import numpy as np
 from PIL import Image
 
-def create_image_from_csv(filename, red_field, green_field, blue_field):
-    # Read CSV data into a numpy array
-    data = np.genfromtxt(filename, delimiter=',', skip_header=1)
 
-    # Extract red, green, and blue color channels from selected fields
-    red = data[:, red_field]
-    green = data[:, green_field]
-    blue = data[:, blue_field]
+def csv_to_image(csv_file, red_field, green_field, blue_field):
+    # Read the csv file into a pandas dataframe
+    df = pd.read_csv(csv_file)
 
-    # Scale values to 0-255 range
-    red = (255 * (red - np.min(red)) / (np.max(red) - np.min(red))).astype(np.uint8)
-    green = (255 * (green - np.min(green)) / (np.max(green) - np.min(green))).astype(np.uint8)
-    blue = (255 * (blue - np.min(blue)) / (np.max(blue) - np.min(blue))).astype(np.uint8)
+    red = df[red_field]
+    green = df[green_field]
+    blue = df[blue_field]
+    # Normalize the values of the selected fields to be between 0 and 255
+    red = (red - red.min()) / (red.max() - red.min()) * 255
+    green = (green - green.min()) / (green.max() - green.min()) * 255
+    blue = (blue - blue.min()) / (blue.max() - blue.min()) * 255
 
-    # Create image from color channels
-    image_data = np.stack([red, green, blue], axis=-1)
-    image = Image.fromarray(image_data)
+    # Convert the dataframe to a numpy array of integers
+    rgb_array = df[[red_field, green_field, blue_field]].to_numpy().astype(np.uint8)
+
+    # Reshape the array to have a square shape with three channels for RGB
+    side_length = int(np.sqrt(len(rgb_array)))
+    rgb_array = rgb_array[:side_length ** 2]
+    rgb_array = rgb_array.reshape(side_length, side_length, 3)
+
+    # Create an image from the array and return it
+    image = Image.fromarray(rgb_array)
+
 
     return image
+
+
+if __name__ == '__main__':
+    # Create a new csv file with three fields
+    # Open csv file for writing
+    f = open('file.csv', 'w')
+
+    # Create a csv writer object
+    writer = csv.writer(f)
+
+    # Write field names as first row
+    writer.writerow(['x', 'y', 'z'])
+
+    # Write 10 rows of random values
+    for i in range(10):
+        # Generate four random integers between 0 and 255
+        x = random.randint(0, 255)
+        y = random.randint(0, 255)
+        z = random.randint(0, 255)
+
+        # Write a row of values
+        writer.writerow([x, y, z])
+
+    # Close csv file
+    f.close()
+
+    # create an RGB image from csv
+    img = csv_to_image("file.csv", 'x', 'y', 'z')
+    img.show()
